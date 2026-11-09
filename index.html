@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#24527a" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#141516" media="(prefers-color-scheme: dark)">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<title>N1210A W&amp;B</title>
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icons/icon-192.png">
+<link rel="apple-touch-icon" href="icons/icon-192.png">
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<main id="app">
+
+  <!-- LOAD TAB -->
+  <section class="tab" id="tab-load">
+    <header class="top">
+      <h1 id="hdrTail">N1210A</h1>
+      <div class="sub" id="hdrSub"></div>
+    </header>
+
+    <div class="card">
+      <h2>People and fuel</h2>
+      <div class="field"><label for="pilot">Pilot, front seat<span class="lim" id="limPilot"></span></label><input type="number" inputmode="decimal" id="pilot" min="0"></div>
+      <div class="field"><label for="pax">Passenger, rear seat<span class="lim" id="limPax"></span></label><input type="number" inputmode="decimal" id="pax" min="0"></div>
+      <div class="field"><label for="fuelGal">Fuel, gallons<span class="lim" id="limFuel"></span></label><input type="number" inputmode="decimal" id="fuelGal" min="0" step="0.5"></div>
+      <div class="field"><label for="bag">Baggage<span class="lim" id="limBag"></span></label><input type="number" inputmode="decimal" id="bag" min="0"></div>
+    </div>
+
+    <div class="card">
+      <h2>Bush Pod <label class="switch"><input type="checkbox" id="podOn"><span></span></label></h2>
+      <div id="podFields">
+        <div class="field"><label>Pod shell<span class="lim" id="limPodShell"></span></label><div class="ro" id="podShellW"></div></div>
+        <div class="field"><label for="podF">Front<span class="lim" id="limPodF"></span></label><input type="number" inputmode="decimal" id="podF" min="0"></div>
+        <div class="field"><label for="podM">Middle, door<span class="lim" id="limPodM"></span></label><input type="number" inputmode="decimal" id="podM" min="0"></div>
+        <div class="field"><label for="podB">Back<span class="lim" id="limPodB"></span></label><input type="number" inputmode="decimal" id="podB" min="0"></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>Other items</h2>
+      <div class="field three"><input type="text" id="x1n" placeholder="Item"><input type="number" inputmode="decimal" id="x1w" placeholder="lb"><input type="number" inputmode="decimal" id="x1a" placeholder="arm" step="0.1"></div>
+      <div class="field three"><input type="text" id="x2n" placeholder="Item"><input type="number" inputmode="decimal" id="x2w" placeholder="lb"><input type="number" inputmode="decimal" id="x2a" placeholder="arm" step="0.1"></div>
+    </div>
+
+    <div class="card">
+      <h2>Fuel burn
+        <span class="seg"><button type="button" data-mode="gal" id="modeGal">Gallons</button><button type="button" data-mode="time" id="modeTime">Time × GPH</button></span>
+      </h2>
+      <div class="field" id="burnGalRow"><label for="burn">Gallons burned</label><input type="number" inputmode="decimal" id="burn" min="0" step="0.5"></div>
+      <div class="field" id="burnTimeRow1"><label for="hrs">Flight time, hours</label><input type="number" inputmode="decimal" id="hrs" min="0" step="0.1"></div>
+      <div class="field" id="burnTimeRow2"><label for="gph">Burn rate, GPH</label><input type="number" inputmode="decimal" id="gph" min="0" step="0.1"></div>
+    </div>
+
+    <div class="card" id="resultCard">
+      <h2>Result</h2>
+      <div class="stats">
+        <div class="stat" id="sTO"><div class="k">Takeoff</div><div class="v" id="sTOv"></div><div class="d" id="sTOd"></div></div>
+        <div class="stat" id="sL"><div class="k">Landing</div><div class="v" id="sLv"></div><div class="d" id="sLd"></div></div>
+        <div class="stat" id="sU"><div class="k">Useful load left</div><div class="v" id="sUv"></div><div class="d" id="sUd"></div></div>
+      </div>
+      <ul class="msgs" id="msgs"></ul>
+      <svg id="chart" viewBox="0 0 640 400" role="img" aria-label="CG envelope"></svg>
+      <div class="legend"><span><i class="sw ink"></i>Envelope</span><span><i class="sw to"></i>Takeoff → landing</span></div>
+      <details class="detail"><summary>Moment table</summary><table id="momTable"></table></details>
+      <div class="actions">
+        <button type="button" class="btn" id="btnSave">Save loadout</button>
+        <button type="button" class="btn" id="btnLog">Log flight</button>
+        <button type="button" class="btn" id="btnShare">Share</button>
+        <button type="button" class="btn" id="btnPrint">PDF</button>
+        <button type="button" class="btn ghost" id="btnReset">Clear</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- SAVED TAB -->
+  <section class="tab" id="tab-saved" hidden>
+    <header class="top"><h1>Saved loadouts</h1><div class="sub">Tap one to load it. Values are editable after loading.</div></header>
+    <div class="card"><ul class="list" id="savedList"></ul><p class="empty" id="savedEmpty">No loadouts yet. Set up a load on the Load tab and tap Save loadout.</p></div>
+  </section>
+
+  <!-- HISTORY TAB -->
+  <section class="tab" id="tab-history" hidden>
+    <header class="top"><h1>Flight log</h1><div class="sub">Logged loadings, newest first.</div></header>
+    <div class="card">
+      <ul class="list" id="histList"></ul>
+      <p class="empty" id="histEmpty">Nothing logged yet. Tap Log flight on the Load tab.</p>
+      <div class="actions"><button type="button" class="btn" id="btnExportCsv">Export CSV</button><button type="button" class="btn ghost" id="btnClearHist">Clear log</button></div>
+    </div>
+  </section>
+
+  <!-- DOCUMENTS TAB -->
+  <section class="tab" id="tab-docs" hidden>
+    <header class="top"><h1>Documents</h1><div class="sub">W&amp;B sheets, STC supplements, equipment lists. Stored on this phone.</div></header>
+    <div class="card">
+      <div class="actions">
+        <label class="btn primary" for="fileDoc">Add document</label><input type="file" id="fileDoc" accept="application/pdf,image/*,.pdf" multiple hidden>
+      </div>
+      <ul class="list" id="docList"></ul>
+      <p class="empty" id="docEmpty">No documents yet. Add your current W&amp;B revision, the 2021 weighing report, and the Bush Pod supplement so they're always with the airplane.</p>
+      <p class="help" id="docUsage"></p>
+    </div>
+  </section>
+
+  <!-- SETTINGS TAB -->
+  <section class="tab" id="tab-settings" hidden>
+    <header class="top"><h1>Aircraft data</h1><div class="sub">Update after each W&amp;B revision. Everything stays on this phone.</div></header>
+    <div class="card">
+      <h2>Identity</h2>
+      <div class="field"><label for="c_tail">Tail number</label><input type="text" id="c_tail"></div>
+      <div class="field"><label for="c_desc">Description</label><input type="text" id="c_desc"></div>
+      <div class="field"><label for="c_rev">W&amp;B revision date</label><input type="text" id="c_rev"></div>
+    </div>
+    <div class="card">
+      <h2>Empty weight</h2>
+      <div class="field"><label for="c_ew">Empty weight, lb</label><input type="number" inputmode="decimal" id="c_ew" step="0.1"></div>
+      <div class="field"><label for="c_em">Empty moment, in-lb</label><input type="number" inputmode="decimal" id="c_em" step="0.01"></div>
+      <div class="field"><label>Empty CG</label><div class="ro" id="c_ecg"></div></div>
+      <div class="field"><label for="c_gross">Max gross, lb</label><input type="number" inputmode="decimal" id="c_gross"></div>
+    </div>
+    <div class="card">
+      <h2>CG envelope</h2>
+      <p class="help">Forward limit points as weight, CG pairs, one per line. Straight line between points; flat beyond the ends. Aft limit is a single value.</p>
+      <div class="field"><label for="c_fwd">Forward limit points</label><textarea id="c_fwd" rows="3"></textarea></div>
+      <div class="field"><label for="c_aft">Aft limit, in</label><input type="number" inputmode="decimal" id="c_aft" step="0.1"></div>
+    </div>
+    <div class="card">
+      <h2>Stations</h2>
+      <div class="field"><label for="c_armPilot">Front seat arm</label><input type="number" inputmode="decimal" id="c_armPilot" step="0.1"></div>
+      <div class="field"><label for="c_armPax">Rear seat arm</label><input type="number" inputmode="decimal" id="c_armPax" step="0.1"></div>
+      <div class="field"><label for="c_armFuel">Fuel arm</label><input type="number" inputmode="decimal" id="c_armFuel" step="0.1"></div>
+      <div class="field"><label for="c_fuelCap">Fuel capacity, gal</label><input type="number" inputmode="decimal" id="c_fuelCap" step="0.5"></div>
+      <div class="field"><label for="c_lbGal">Fuel weight, lb/gal</label><input type="number" inputmode="decimal" id="c_lbGal" step="0.1"></div>
+      <div class="field"><label for="c_armBag">Baggage arm</label><input type="number" inputmode="decimal" id="c_armBag" step="0.1"></div>
+      <div class="field"><label for="c_bagMax">Baggage max, lb</label><input type="number" inputmode="decimal" id="c_bagMax"></div>
+    </div>
+    <div class="card">
+      <h2>Bush Pod</h2>
+      <div class="field"><label for="c_podW">Shell weight, lb</label><input type="number" inputmode="decimal" id="c_podW" step="0.1"></div>
+      <div class="field"><label for="c_podArm">Shell arm</label><input type="number" inputmode="decimal" id="c_podArm" step="0.01"></div>
+      <div class="field"><label for="c_podF">Front zone arm</label><input type="number" inputmode="decimal" id="c_podF" step="0.1"></div>
+      <div class="field"><label for="c_podM">Middle zone arm</label><input type="number" inputmode="decimal" id="c_podM" step="0.1"></div>
+      <div class="field"><label for="c_podB">Back zone arm</label><input type="number" inputmode="decimal" id="c_podB" step="0.1"></div>
+      <div class="field"><label for="c_podMax">Pod cargo max, lb</label><input type="number" inputmode="decimal" id="c_podMax"></div>
+      <div class="field"><label for="c_podInEW">Shell already in empty weight</label><input type="checkbox" class="check" id="c_podInEW"></div>
+      <p class="help">Turn this on once a W&amp;B revision includes the pod. The shell weight then stops being added separately.</p>
+    </div>
+    <div class="card">
+      <h2>Backup</h2>
+      <div class="actions">
+        <button type="button" class="btn" id="btnBackup">Export backup</button>
+        <label class="btn" for="fileRestore">Import backup</label><input type="file" id="fileRestore" accept="application/json,.json" hidden>
+        <button type="button" class="btn ghost" id="btnDefaults">Restore defaults</button>
+      </div>
+      <p class="help" id="verLine"></p>
+    </div>
+  </section>
+
+  <!-- PRINT SHEET -->
+  <section id="printSheet" aria-hidden="true"></section>
+</main>
+
+<nav class="tabs">
+  <button type="button" data-tab="load" class="on"><span class="ic">⚖</span>Load</button>
+  <button type="button" data-tab="saved"><span class="ic">★</span>Saved</button>
+  <button type="button" data-tab="history"><span class="ic">≡</span>Log</button>
+  <button type="button" data-tab="docs"><span class="ic">▤</span>Docs</button>
+  <button type="button" data-tab="settings"><span class="ic">⚙</span>Aircraft</button>
+</nav>
+
+<div class="toast" id="toast"></div>
+<div class="modal" id="modal" hidden>
+  <div class="box">
+    <h3 id="modalTitle"></h3>
+    <input type="text" id="modalInput">
+    <div class="actions"><button type="button" class="btn ghost" id="modalCancel">Cancel</button><button type="button" class="btn primary" id="modalOk">OK</button></div>
+  </div>
+</div>
+
+<script src="app.js"></script>
+</body>
+</html>
