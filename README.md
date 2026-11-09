@@ -14,3 +14,4 @@ Push changes to this repo. Bump `CACHE` in `sw.js` so installed phones pick up t
 - `index.html`, `styles.css`, `app.js`: the app
 - Documents tab stores PDFs in the browser's IndexedDB on the phone; they are not part of the JSON backup
 - `manifest.webmanifest`, `sw.js`, `icons/`: PWA install and offline support
+
